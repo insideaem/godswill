@@ -1,0 +1,216 @@
+Ext.define('GW.view.Verse', {
+	alias: 'widget.verse',
+	extend: 'Ext.Component',
+	cls: 'x-verse',
+	displayMode: 'full',
+	overCls: 'x-verse-hover',
+	showTip: false,
+	highlight: undefined,
+    
+    afterRender: function() {
+    	var me = this;
+    	me.mon(me.el, {
+    		click: me.onClick,
+    		scope: me
+    	});
+    	
+    	if(me.showTip){
+    		
+	    	var tip = Ext.create('Ext.tip.ToolTip', {
+	    	    target: me.el,
+	    	    dismissDelay: 0,
+	    	    autoHide: false,
+	    	    verse: me.verse,
+	    	    width: 200,
+	    	    tools: [{
+	    	        type: 'prev',
+	    	        tooltip: 'Previous verse',
+	    	        itemId: 'prevBtn',
+	    	        handler: function(){
+	    	        	tip.loadNextOrPrevVerse(tip.verse.getPrevVerse());
+	    	        }
+	    	    },
+    	        {
+	    	        type: 'next',
+	    	        itemId: 'nextBtn',
+	    	        tooltip: 'Next verse',
+	    	        handler: function(){
+	    	        	tip.loadNextOrPrevVerse(tip.verse.getNextVerse());
+	    	        }
+    	        }],
+    	        
+    	        loadNextOrPrevVerse: function(verse){
+    	        	tip.setLoading(true);
+	    			me.fireEvent('loadverse', verse, tip.afterNextOrPrevLoaded);
+    	        },
+    	        
+    	        afterNextOrPrevLoaded: function(verse){
+    	        	tip.verse = verse;
+    				// Refresh content
+    				var hContent = tip.getTipContent();
+    				tip.update(hContent);
+    				// Content available --> Hide loading state
+    				tip.setLoading(false);
+    	        },
+    	        
+    	        getTipContent: function(){
+    	        	return me.prependLabel(me.getHighlightedContent(undefined, tip.verse), tip.verse);
+    	        },
+    	        
+    	        enableTools: function(){
+    	        	var hasNext = tip.verse.hasNext();
+    	        	var hasPrev = tip.verse.hasPrev();
+    	        	
+    	        	if(!hasNext){
+    	        		tip.down('#nextBtn').disable();
+    	        	}
+    	        	else{
+    	        		tip.down('#nextBtn').enable();
+    	        	}
+    	        	
+    	        	if(!hasPrev){
+    	        		tip.down('#prevBtn').disable();
+    	        	}
+    	        	else{
+    	        		tip.down('#prevBtn').enable();
+    	        	}
+    	        },
+    	        
+    	        afterVerseLoaded: function(verse){
+    	        	me.verse = verse;
+    				tip.verse = verse;
+    				// Refresh content
+    				var hContent = tip.getTipContent();
+    				tip.update(hContent);
+    				// Content available --> Hide loading state
+    				me.setLoading(false);
+    				if(me.isHovered()){
+    					tip.show();
+    				}
+    				
+    			},
+	    	    listeners: {
+	    	    	afterlayout: function(tip){
+	    	    		tip.enableTools();
+	    	    	},
+	    	    	beforeshow: function(tip){
+	    	    		if(!me.verse.hasContent()){
+	    	    			// No content yet -->Show loading state and load verse async
+	    	    			me.setLoading(true);
+	    	    			me.fireEvent('loadverse', me.verse, tip.afterVerseLoaded);
+	    	    			return false;
+	    	    		}
+	    	    		else{
+	    	    			tip.verse = me.verse;
+	    	    			
+	    	    			var hContent = tip.getTipContent();
+	    	    			tip.update(hContent);
+	    	    		}
+	    	    	}
+	    	    }
+	    	});
+	    	
+	    	tip.on('show', function(){
+	    		var timeout;
+		    	var toolTip = tip;
+		        toolTip.getEl().on('mouseleave', function(){
+		            timeout = window.setTimeout(function(){
+		                toolTip.hide();
+		            }, 500);
+		        });
+
+		        toolTip.getEl().on('mouseenter', function(){
+		            window.clearTimeout(timeout);
+		        });
+
+		        Ext.get(me.el).on('mouseout', function(){
+		            timeout = window.setTimeout(function(){
+		                toolTip.hide();
+		            }, 500);
+		        });
+
+	    	});
+
+    	}
+    	/*
+    	if(me.displayField == 'content'){
+    		me.mon(me.el, {
+    			contextmenu: function(event){
+    				Ext.create('Ext.menu.Menu', {
+    				    items: [{
+    				        text: 'regular item 1'
+    				    },{
+    				        text: 'regular item 2'
+    				    },{
+    				        text: 'regular item 3'
+    				    }]
+    				}).showAt(event.getXY());
+    				event.preventDefault();
+    				return false;
+    			},
+    			scope: me
+    		});
+    	}
+    	*/
+    	me.callParent();
+    },
+    
+    onRender: function(){
+    	this.html = this.getHighlightedContent();
+    	if(this.displayMode == 'full'){
+    		this.html = this.prependLabel(this.html);
+    	}
+    	else if(this.displayMode == 'short'){
+    		this.html = this.verse.getLabel();
+    	}
+    	
+    	this.callParent(arguments);
+    },
+    
+    prependLabel: function(text, _verse){
+    	var verse = this.verse;
+    	if(Ext.isObject(_verse)){
+    		verse = _verse;
+    	}
+    	return '<small>['+verse.getLabel()+'</small>] '+text;
+    },
+    
+    onClick: function(e){
+    	this.fireEvent('click', e, this);
+    },
+    
+    getHighlightedContent: function(_text, _verse){
+    	var text = this.highlight;
+    	if(Ext.isString(_text)){
+    		text = _text;
+    	}
+    	
+    	var v = this.verse;
+    	if(Ext.isObject(_verse)){
+    		v = _verse;
+    	}
+    	
+    	var highlightedContent = v.getContent();
+    	if(Ext.isString(text)){
+    		var regText = "\\b("+text.split(" ").join("|")+")\\b";
+    		var reg = new RegExp(regText,'gi');
+    		highlightedContent = highlightedContent.replace(reg, '<span class="highlighted">$1</span>');
+    	}
+    	
+    	return highlightedContent;
+    },
+    
+    isHovered: function(){
+    	return this.el.hasCls(this.overCls);
+    },
+    
+    select: function(){
+    	this.addCls('x-verse-selected');
+    	return this;
+    },
+    
+    unselect: function(){
+    	this.removeCls('x-verse-selected');
+    	return this;
+    }
+})

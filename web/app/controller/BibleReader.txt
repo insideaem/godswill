@@ -1,0 +1,312 @@
+Ext.define('GW.controller.BibleReader', {
+    extend : 'Ext.app.Controller',
+    requires : [ 'GW.view.Verse' ],
+
+    refs : [ {
+	ref : 'bibleContent',
+	selector : 'biblecontent'
+    }, {
+	ref : 'versePanel',
+	selector : 'biblecontent > versepanel > dataview'
+    }, {
+	ref : 'bibleReferences',
+	selector : '#references'
+    } ],
+
+    stores : [ 'Bibles', 'BibleContent', 'Verses' ],
+
+    init : function() {
+	// Start listening for events on views
+	var me = this;
+	this.control({
+	    'biblecontent > versepanel ' : {
+		verse_selected : function(verse) {
+		    alert('Verse clicked');
+		    return;
+		    var verse = verseView.verse;
+		    // Update references
+		    var verses = [];
+		    Ext.Array.each(verse.getReferences(), function(reference) {
+			verses.push({
+			    xtype : 'verse',
+			    displayMode : 'short',
+			    showTip : true,
+			    verse : reference
+			});
+		    });
+
+		    this.getBibleReferences().setVerses(verses).expand();
+		}
+	    },
+	    'biblecontent search' : {
+		search : function(e, query) {
+		    this.getBibleSearch().setLoading(true);
+		    var me = this;
+		    Ext.Ajax.request({
+			url : '/content/godswill.search.json',
+			method : 'GET',
+			disableCaching : false,
+			params : {
+			    q : query,
+			    b : me.currentBibleVersion.getId()
+			},
+			success : function(response) {
+			    var text = response.responseText;
+			    var searchResults = Ext.JSON.decode(text);
+			    var verses = [];
+
+			    // Convert to verse objects
+			    Ext.Array.each(searchResults, function(searchResult) {
+				verses.push({
+				    xtype : 'verse',
+				    displayMode : 'short',
+				    showTip : true,
+				    highlight : query,
+				    verse : GW.model.bible.Verse.searchResultToVerse(searchResult)
+				});
+			    });
+			    me.getBibleSearch().setVerses(verses).setLoading(false);
+			}
+		    });
+		}
+	    },
+
+	    'biblecontent' : {
+		version_selected : function(record) {
+		    // Load selected version
+		    var bibleVersion = record.getId();
+		    var chapter = bibleVersion + '/gen/1';
+		    if (!me.getBibleContentStore().contains(chapter)) {
+			GW.model.bible.Chapter.load(chapter, {
+			    success : function(record) {
+				me.getBibleContentStore().add(record);
+				me.getVersePanel().bindStore(record.verses());
+			    }
+			});
+		    }
+		}
+	    },
+
+	    'biblecontent #bibleBrowser' : {
+		click : function() {
+		    alert('bibleBrowser clicked!');
+		    // this.onBibleVersionChanged();
+		}
+	    }
+	});
+    },
+
+    onBibleVersionChanged : function(btn) {
+	var bibleVersionId = btn.getId();
+
+	if (this.setCurrentBibleVersion(this.getBibleVersionStore().getById(bibleVersionId))) {
+	    var items = btn.up().items;
+	    items.each(function(item) {
+		item.toggle(false);
+	    });
+
+	    btn.toggle(true);
+
+	    // this.getBibleTree().setRootNode({"id" : bibleVersionId, "text":
+	    // bibleVersionId});
+	    this.loadBibleContent();
+	}
+    },
+
+    setCurrentBibleVersion : function(newBibleVersion) {
+	if (!Ext.isObject(this.currentBibleVersion) || (this.currentBibleVersion.getId() != newBibleVersion.getId())) {
+	    this.currentBibleVersion = newBibleVersion;
+	    this.getSelectedBibleObject().bible = this.currentBibleVersion.getId();
+	    return true;
+	} else {
+	    return false;
+	}
+    },
+
+    onLaunch : function() {
+	if (!this.selectedVersion) {
+	    this.getBibleContent().showVersionBrowser();
+	}
+	return;
+	var store = Ext.create('Ext.data.ArrayStore', {
+	    // reader configs
+	    fields : [ 'text' ],
+	    data : [ [ 'Verse1' ], [ 'Verse2' ], [ 'Verse3' ] ]
+	});
+	this.getVersePanel().bindStore(store);
+	return;
+
+	// Prevent interactions with the reader until it is loaded
+	this.getBibleContent().setLoading(true);
+	bibleVersionStore.load({
+	    callback : this.onBibleVersionsLoaded,
+	    scope : this
+	});
+    },
+
+    onBibleVersionsLoaded : function(bibles, operation, success) {
+	if (success) {
+	    // Populate list of bibles
+	    var toolbarItems = [];
+	    for ( var i = 0; i < bibles.length; i++) {
+		var bible = bibles[i];
+		toolbarItems.push({
+		    text : bible.get('title'),
+		    id : bible.get('id'),
+		    xtype : 'button'
+		});
+	    }
+
+	    var toolbar = {
+		xtype : 'toolbar',
+		dock : 'top',
+		items : toolbarItems
+	    };
+
+	    this.getBibleContent().addDocked(toolbar);
+
+	    // Click first toolbar button --> This will trigger event to load
+	    // bible content
+	    var firstBtn = this.getBibleContent().down('toolbar > button');
+	    firstBtn.fireEvent('click', firstBtn);
+	} else {
+	    // Enable interactions with the reader
+	    this.getBibleContent().update('Could not load bible content.');
+	    this.getBibleContent().setLoading(false);
+	}
+    },
+
+    setClickedVerse : function(verseView) {
+	var verse = verseView.verse;
+	var selectedBiblePath = verse.get('id');
+	if (!Ext.isString(selectedBiblePath)) {
+	    // No current selected bible path --> Init to kjv/gen/1/1
+	    selectedBiblePath = 'kjv/gen/1/1';
+	}
+
+	var parts = selectedBiblePath.split('/');
+
+	var oldBible = undefined;
+	var oldBook = undefined;
+	if (Ext.isObject(this.selectedBibleObject)) {
+	    oldBible = this.selectedBibleObject.bible;
+	    oldBook = this.selectedBibleObject.book;
+	    oldChapter = this.selectedBibleObject.chapter;
+	}
+
+	this.selectedBibleObject = {
+	    'bible' : parts[0] || 'kjv',
+	    'book' : parts[1] || 'gen',
+	    'chapter' : parts[2] || '1',
+	    'verse' : parts[3] || '1'
+	};
+	var reloadBibleContent = (oldBible != this.selectedBibleObject.bible) || (oldBook != this.selectedBibleObject.book) || (oldChapter != this.selectedBibleObject.chapter);
+	if (reloadBibleContent) {
+	    this.highlight = verseView.highlight;
+	    this.loadBibleContent();
+	} else {
+	    this.updateHash();
+	}
+    },
+
+    getSelectedBibleObject : function() {
+	if (!Ext.isObject(this.selectedBibleObject)) {
+	    this.selectedBibleObject = {
+		'bible' : 'kjv',
+		'book' : 'gen',
+		'chapter' : '1',
+		'verse' : '1'
+	    };
+	}
+
+	return this.selectedBibleObject;
+    },
+
+    getChapterPath : function() {
+	var selectedBibleObject = this.getSelectedBibleObject();
+	return selectedBibleObject.bible + '/' + selectedBibleObject.book + '/' + selectedBibleObject.chapter;
+    },
+
+    loadBibleContent : function() {
+	// Disable interactions with the reader
+	this.getBibleContent().setLoading(true);
+
+	var path = this.getChapterPath();
+
+	GW.model.bible.Chapter.load(path, {
+	    scope : this,
+	    callback : function(chapter, operation) {
+		this.onBibleContentLoaded(chapter);
+	    }
+	});
+    },
+
+    onBibleContentLoaded : function(chapter) {
+	this.setCurrentBibleChapter(chapter);
+	this.refreshBibleView();
+
+	// Enable interactions with the reader
+	this.getBibleContent().setLoading(false);
+    },
+
+    setCurrentBibleChapter : function(newBibleChapter) {
+	this.currentBibleChapter = newBibleChapter;
+    },
+
+    getCurrentBibleView : function() {
+	var treeObject = this.getSelectedBibleObject();
+	var me = this;
+	return {
+	    bible : this.currentBibleVersion.getId(),
+	    title : this.currentBibleVersion.get('title'),
+	    book : treeObject.book,
+	    chapter : treeObject.chapter,
+	    currentVerse : treeObject.verse,
+	    verses : this.currentBibleChapter.verses(),
+	    content : function() {
+		var content = [];
+		this.verses.each(function(_verse, index) {
+		    // content += '<a name="'+verse.get('id')+'"><div
+		    // class="verse" id="'+verse.get('id')+'"><sup
+		    // class="verseno">('+(index+1)+')</sup>'+verse.get('content')+'</div></a>';
+		    var item = {
+			xtype : 'verse',
+			highlight : me.highlight,
+			verse : _verse,
+			itemId : _verse.get('id')
+		    };
+		    content.push(item);
+		});
+		return content;
+	    }
+	};
+    },
+
+    refreshBibleView : function() {
+	var bibleView = this.getCurrentBibleView();
+
+	var content = '<div>Current bible version: <b>' + bibleView.title + '</b><br/>';
+	content += 'Showing bible entry:<br/>Book: ' + bibleView.book + '<br/>Chapter: ' + bibleView.chapter + '<br/> Verse: ' + bibleView.currentVerse + '</div>';
+
+	content = bibleView.content();
+	this.highlight = undefined;
+
+	this.getBibleContent().down('panel').removeAll();// .update(content);
+	this.getBibleContent().down('panel').add(content);
+	this.updateHash();
+    },
+
+    updateHash : function() {
+	var bibleView = this.getCurrentBibleView();
+	var versePath = bibleView.bible + '/' + bibleView.book + '/' + bibleView.chapter + '/' + bibleView.currentVerse;
+
+	var selectedVerse = this.getBibleContent().down('panel').getComponent(versePath);
+	if (selectedVerse) {
+	    if (this.lastSelectedVerse) {
+		this.lastSelectedVerse.unselect();
+	    }
+	    this.lastSelectedVerse = selectedVerse;
+	    selectedVerse.select();
+	}
+    }
+});

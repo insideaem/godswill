@@ -1,0 +1,15 @@
+﻿{
+	id: 'GEN_2',
+	book: 'Genesis',
+	chapter: '2',
+	verses: [
+		{
+			id: 'GEN_2_1',
+			content: 'The heavens and the earth were completed with everything that was in them.'
+		},
+		{
+			id: 'GEN_2_2',
+			content: 'By the seventh day God finished the work that he had been doing, and he ceased on the seventh day all the work that he had been doing.'
+		}
+	]
+}

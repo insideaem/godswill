@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--Nice Viewer for this file are found here-->
+<!--http://www.theword.gr-->
+<!--http://www.mybible.de-->
+<!--http://bgfdb.de/zefaniaxml/bml/-->
+<!--Visit the online documentation for Zefania XML Markup-->
+<XMLBIBLE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="zef2005.xsd" version="2.0.1.18" status="v" biblename="King James Version" type="x-bible" revision="0">
+  <INFORMATION>
+    <title>King James Version</title>
+    <creator></creator>
+    <subject>The Holy Bible</subject>
+    <description>In 1604, King James I of England authorized that a new translation of the Bible into English be started. It was finished in 1611, just 85 years after the first translation of the New Testament into English appeared (Tyndale, 1526). The Authorized Version, or King James Version, quickly became the standard for English-speaking Protestants. Its flowing language and prose rhythm has had a profound influence on the literature of the past 300 years.</description>
+    <publisher>FREE BIBLE SOFTWARE GROUP</publisher>
+    <contributors />
+    <date>2009-01-23</date>
+    <type>Bible</type>
+    <format>Zefania XML Bible Markup Language</format>
+    <identifier>kjv</identifier>
+    <source>http://www.unboundbible.com/zips/index.cfm?lang=English</source>
+    <language>ENG</language>
+    <coverage>provide the Bible to the nations of the world</coverage>
+    <rights>We believe that this Bible is found in the Public Domain.</rights>
+  </INFORMATION>
+</XMLBIBLE>

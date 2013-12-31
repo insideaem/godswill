@@ -1,0 +1,15 @@
+﻿{
+	id: 'GEN_1',
+	book: 'Genesis',
+	chapter: '1',
+	verses: [
+		{
+			id: 'GEN_1_1',
+			content: 'The heavens and the earth were completed with everything that was in them.'
+		},
+		{
+			id: 'GEN_1_2',
+			content: 'Now the earth was without shape and empty, and darkness was over the surface of the watery deep, but the Spirit of God was moving over the surface of the water.'
+		}
+	]
+}

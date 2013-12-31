@@ -1,0 +1,62 @@
+﻿{id:"toc", children: [
+	{
+		text: "Gen",
+		id: "GEN",
+		url: "/GEN",
+		iconCls: "book",
+		children: [
+			{
+				text: "1",
+				id: "GEN_1",
+				url: "/GEN/1",
+				children: [
+					{
+						id: "GEN_1_1",
+						url: "/GEN/1/1",
+						text: "1",
+						leaf: true
+					},
+					{
+						id: "GEN_1_2",
+						url: "/GEN/1/2",
+						text: "2",
+						leaf: true
+					}
+				]
+			},
+			{
+				id: "GEN_2",
+				url: "/GEN/2",
+				text: "2",
+				leaf: true
+			}
+		]
+	},
+	{
+		text: "Exo",
+		id: "EXO",
+		url: "/EXO",
+		iconCls:"book",
+		children: [
+			{
+				text: "1",
+				id: "EXO_1",
+				url: "/EXO/1",
+				leaf: true 
+			},
+			{ 
+				text: "2",
+				id: "EXO_2",
+				url: "/EXO/2",
+				leaf: true
+			}
+		]
+	},
+	{
+		text: "Mat",
+		id: "MAT",
+		url: "/MAT",
+		iconCls:"book",
+		leaf: true
+	}
+]}

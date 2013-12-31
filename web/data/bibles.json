@@ -1,0 +1,16 @@
+﻿[
+	{
+		'id': 'KJV',
+		'title': 'King James Version',
+		'description': 'The King James Version of the Bible',
+		'hasStrong': false
+	},
+	{
+		'id': 'NET',
+		'title': 'New English Translation'
+	},
+	{
+		'id': 'LSG',
+		'title': 'Louis Segond'
+	}
+]

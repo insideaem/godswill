@@ -1,0 +1,70 @@
+h1,h2,h3,h4,h5,h6{
+	font-family: 'Open Sans Condensed', sans-serif;
+}
+/* START LOADING STYLES */
+.x-border-layout-ct #loadingapp{
+	display: none;
+}
+/* END LOADING STYLES */
+
+/* START CUSTOM TOOLS */
+.x-login{
+	background-image: url("/images/icons/login.png");
+	background-repeat: no-repeat;
+}
+/* END CUSTOM TOOLS */
+
+.tocBrowser, .bibleBrowser{
+	font-family: 'Open Sans Condensed', sans-serif;
+}
+
+.tocBrowser .x-header-text, .bibleBrowser .x-header-text{
+	text-transform: uppercase;
+}
+
+.tocBrowser .book, .tocBrowser .chapter{
+	height: 32px;
+	font-weight: bold;
+	display: inline-block;
+	text-transform: uppercase;
+	font-size: 1em;
+	text-align: center;
+	padding: 6px;
+	margin: 2px;
+}
+
+.verse .verseNr {
+	vertical-align: super;
+	font-size: 0.66em;
+	margin-right: 2px;
+	color: goldenrod;
+	font-weight: bold;
+}
+
+.verse{
+	display: inline;
+	margin-right: 2px;
+}
+
+.bibleBrowser .bible{
+	font-size: 3em;
+	font-weight: bold;
+	text-transform: uppercase;
+	text-align: center;
+	margin: 6px;
+}
+
+.bible-over,.chapter-over,.book-over, .verse-over{
+	background-color: #ddd;
+}
+
+.selected-chapter, .selected-book, .selected-bible{
+	background-color: #3892d3;
+	color: #FFF;
+}
+
+.login-error{
+	color : #CC0000;
+	font-weight: bold;
+}
+
