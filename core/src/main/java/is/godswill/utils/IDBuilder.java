@@ -9,11 +9,11 @@ public class IDBuilder {
 		String[] splits = path.split("/");
 		String result = "";
 
-		if (splits.length == 4) {
+		if (splits.length == 5) {
 			// This is at the bible level --> reutrn bible node name
-			result = splits[3];
-		} else if (splits.length > 4) {
-			splits = Arrays.copyOfRange(splits, 4, splits.length);
+			result = splits[4];
+		} else if (splits.length > 5) {
+			splits = Arrays.copyOfRange(splits, 5, splits.length);
 			result = StringUtils.join(splits, "_");
 		}
 		return result;

@@ -26,6 +26,10 @@
 	return this.get('name');
     },
 
+    getPath : function() {
+	return this.get('path');
+    },
+
     getNext : function() {
 	return this.get('next');
     },

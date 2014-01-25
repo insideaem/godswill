@@ -3,7 +3,7 @@
     model : 'GW.model.bible.Bible',
     proxy : {
 	type : 'ajax',
-	url : '/content/godswill.list.json'
+	url : '/content/godswill/bibles.list.json'
     },
 
     getBible : function(id) {
@@ -15,7 +15,7 @@
 	if (bible.isLoaded()) {
 	    callback(bible);
 	} else {
-	    GW.model.bible.Bible.load(bibleId + '.list', {
+	    GW.model.bible.Bible.load('bibles/' + bibleId + '.list', {
 		success : function(record) {
 		    bible.set('loaded', true);
 		    var books = record.books().getRange();
@@ -27,14 +27,16 @@
     },
 
     getChapter : function(bibleId, chapterId, callback) {
+	var parts = chapterId.split('_');
+	var bookId = parts[0];
+
 	var bible = this.getBible(bibleId);
-	var bibleObject = this.buildBibleObject(chapterId);
-	var book = bible.books().getById(bibleObject.bookId);
+	var book = bible.books().getById(bookId);
 	var chapters = book.chapters();
-	var chapter = chapters.getById(bibleObject.chapterId);
+	var chapter = chapters.getById(chapterId);
 
 	if (!chapter.isLoaded()) {
-	    GW.model.bible.Chapter.load(bibleId + '/' + bibleObject.chapterPath + '.list', {
+	    GW.model.bible.Chapter.load('bibles/' + chapter.getPath() + '.list', {
 		success : function(record) {
 		    chapter.set('loaded', true);
 		    var verses = record.verses().getRange();
@@ -46,18 +48,5 @@
 	} else {
 	    callback(chapter);
 	}
-    },
-
-    buildBibleObject : function(id) {
-	var result = {};
-	var splits = id.split('_');
-
-	result.bookId = splits[0];
-	if (splits[1]) {
-	    result.chapterId = result.bookId + '_' + splits[1];
-	    result.chapterPath = result.bookId + '/' + splits[1];
-	}
-
-	return result;
     }
 });

@@ -1,5 +1,5 @@
 {
-  "name": "godswill",
+  "name": "bibles",
   "primaryNodeType": "sling:Folder",
   "sling:resourceType": "godswill/bibles"
 }

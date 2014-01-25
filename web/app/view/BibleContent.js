@@ -29,14 +29,14 @@
 	    itemId : 'previousBookBtn',
 	    handler : function() {
 		// Load previous book at first chapter
-		me.loadChapter(me.chapter.getBook().getPrevious() + '_1');
+		me.loadChapter(me.chapter.getBook().getBible().getId(), me.chapter.getBook().getPrevious() + '_1');
 	    }
 	}, {
 	    text : '<',
 	    tooltip : 'Previous chapter',
 	    itemId : 'previousChapterBtn',
 	    handler : function() {
-		me.loadChapter(me.chapter.getPrevious());
+		me.loadChapter(me.chapter.getBook().getBible().getId(), me.chapter.getPrevious());
 	    }
 	}, {
 	    text : 'Select Chapter',
@@ -50,7 +50,7 @@
 	    tooltip : 'Next chapter',
 	    itemId : 'nextChapterBtn',
 	    handler : function() {
-		me.loadChapter(me.chapter.getNext());
+		me.loadChapter(me.chapter.getBook().getBible().getId(), me.chapter.getNext());
 	    }
 	}, {
 	    text : '&raquo;',
@@ -58,11 +58,31 @@
 	    itemId : 'nextBookBtn',
 	    handler : function() {
 		// Load next book at first chapter
-		me.loadChapter(me.chapter.getBook().getNext() + '_1');
+		me.loadChapter(me.chapter.getBook().getBible().getId(), me.chapter.getBook().getNext() + '_1');
 	    }
 	}, '->', '->', {
 	    xtype : 'textfield',
-	    value : 'Search'
+	    value : 'Search',
+	    listeners : {
+		specialkey : function(field, event) {
+		    if (event.getKey() == event.ENTER) {
+			var operation = new Ext.data.Operation({
+			    action : 'read',
+			    params : {
+				q : field.getValue()
+			    }
+			});
+			var proxy = new Ext.data.proxy.Ajax({
+			    url : '/content/godswill/bibles/' + me.chapter.getBook().getBible().getPath() + '.search.json',
+			    reader : 'array'
+			});
+
+			proxy.read(operation, function(a, b, c, d, e, f) {
+			    console.log(a);
+			});
+		    }
+		}
+	    }
 	}, '->', '->', {
 	    xtype : 'button',
 	    text : 'Login',
@@ -98,6 +118,10 @@
 	    },
 	    items : [ {
 		xtype : 'versepanel',
+		title : 'Search Results',
+		itemId : 'searchResults'
+	    }, {
+		xtype : 'versepanel',
 		title : 'References',
 		itemId : 'references'
 	    }, {
@@ -125,7 +149,7 @@
 		chapter : me.chapter,
 		listeners : {
 		    chapter_selected : function(chapter) {
-			me.loadChapter(chapter.getId());
+			me.loadChapter(chapter.getBook().getBible().getId(), chapter.getId());
 		    },
 		    show : function() {
 			this.anchorTo(me.down('#tocBrowserBtn').getEl());
@@ -151,9 +175,8 @@
 
     },
 
-    loadChapter : function(chapterId) {
+    loadChapter : function(bibleId, chapterId) {
 	var me = this;
-	var bibleId = me.bible.getId();
 
 	me.setLoading(true);
 	me.bibleStore.getChapter(bibleId, chapterId, function(chapter) {
@@ -167,8 +190,7 @@
     },
 
     applyState : function(state) {
-	this.bibleId = state.bibleId;
-	this.chapterId = state.chapterId;
+	this.chapterSignature = state.chapterSignature;
     },
 
     loadAfterBibleSelected : function(bibleId, chapterId) {
@@ -176,9 +198,8 @@
 	this.setLoading(true);
 
 	this.bibleStore.loadBible(bibleId, function(loadedBible) {
-	    me.bible = loadedBible;
 	    me.down('#bibleBrowserBtn').setText(loadedBible.getTitle());
-	    me.loadChapter(chapterId);
+	    me.loadChapter(bibleId, chapterId);
 	});
     },
 
@@ -190,7 +211,9 @@
 		listeners : {
 		    bible_selected : function(bible) {
 			// Load selected bible at chapter gen 1:1
-			me.loadAfterBibleSelected(bible.getId(), (me.chapter ? me.chapter.getId() : 'gen_1'));
+			var chapterId = me.chapter ? me.chapter.getId() : 'gen_1';
+
+			me.loadAfterBibleSelected(bible.getId(), chapterId);
 		    },
 		    show : function() {
 			this.anchorTo(me.down('#bibleBrowserBtn').getEl());
@@ -206,23 +229,18 @@
 	this.bibleStore.load({
 	    scope : this,
 	    callback : function() {
-		if (!this.bibleId || !this.chapterId) {
+		if (!this.chapterSignature) {
 		    this.showBibleBrowser();
 		} else {
-
-		    this.loadAfterBibleSelected(this.bibleId, this.chapterId);
+		    this.loadAfterBibleSelected(this.chapterSignature.bibleId, this.chapterSignature.chapterId);
 		}
 	    }
 	});
     },
 
     getState : function() {
-	var currentState = this.callParent() || {};
 	if (this.chapter) {
-	    currentState.chapterId = this.chapter.getId();
-	}
-	if (this.bible) {
-	    currentState.bibleId = this.bible.getId();
+	    currentState.chapterSignature = this.chapter.getSignature();
 	}
 	return currentState;
     }

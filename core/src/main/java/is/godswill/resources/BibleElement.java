@@ -49,7 +49,7 @@ public abstract class BibleElement extends ResourceWrapper {
 	}
 
 	public String getShortPath() {
-		return getPath().replaceFirst("/content/godswill/", "");
+		return getPath().replaceFirst("/content/godswill/bibles/", "");
 	}
 
 	public BibleElement getNext() {
